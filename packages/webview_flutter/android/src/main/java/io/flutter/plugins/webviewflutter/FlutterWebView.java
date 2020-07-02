@@ -48,6 +48,14 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     platformThreadHandler = new Handler(context.getMainLooper());
     // Allow local storage.
     webView.getSettings().setDomStorageEnabled(true);
+    webView.getSettings().setLoadWithOverviewMode(true);
+    webView.getSettings().setUseWideViewPort(true);
+    webView.getSettings().setJavaScriptEnabled(true);
+    webView.getSettings().setAllowFileAccessFromFileURLs(true);
+    webView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+    webView.getSettings().setBuiltInZoomControls(true);
+    webView.getSettings().setDisplayZoomControls(true);
+    webView.getSettings().setSupportZoom(true);
     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
 
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview_" + id);
