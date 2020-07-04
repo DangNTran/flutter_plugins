@@ -7,13 +7,15 @@
 #import "JavaScriptChannelHandler.h"
 
 @implementation FLTWebViewFactory {
+  NSObject<FlutterPluginRegistrar>* _registrar;
   NSObject<FlutterBinaryMessenger>* _messenger;
 }
 
-- (instancetype)initWithMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
+- (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   self = [super init];
   if (self) {
-    _messenger = messenger;
+    _registrar = registrar;
+    _messenger = registrar.messenger;
   }
   return self;
 }
@@ -28,7 +30,7 @@
   FLTWebViewController* webviewController = [[FLTWebViewController alloc] initWithFrame:frame
                                                                          viewIdentifier:viewId
                                                                               arguments:args
-                                                                        binaryMessenger:_messenger];
+                                                                        registrar:_registrar];
   return webviewController;
 }
 
@@ -69,12 +71,14 @@
 - (instancetype)initWithFrame:(CGRect)frame
                viewIdentifier:(int64_t)viewId
                     arguments:(id _Nullable)args
-              binaryMessenger:(NSObject<FlutterBinaryMessenger>*)messenger {
+              registrar:(NSObject<FlutterPluginRegistrar>*)registrar {
   if (self = [super init]) {
     _viewId = viewId;
+    _registrar = registrar;
 
     NSString* channelName = [NSString stringWithFormat:@"plugins.flutter.io/webview_%lld", viewId];
-    _channel = [FlutterMethodChannel methodChannelWithName:channelName binaryMessenger:messenger];
+    _channel = [FlutterMethodChannel methodChannelWithName:channelName
+                                           binaryMessenger:registrar.messenger];
     _javaScriptChannelNames = [[NSMutableSet alloc] init];
 
     WKUserContentController* userContentController = [[WKUserContentController alloc] init];
@@ -113,7 +117,11 @@
 
     NSString* initialUrl = args[@"initialUrl"];
     if ([initialUrl isKindOfClass:[NSString class]]) {
-      [self loadUrl:initialUrl];
+      if ([initialUrl rangeOfString:@"://"].location == NSNotFound) {
+           [self loadAssetFile:initialUrl];
+      } else {
+               [self loadUrl:initialUrl];
+      }
     }
   }
   return self;
@@ -128,6 +136,8 @@
     [self onUpdateSettings:call result:result];
   } else if ([[call method] isEqualToString:@"loadUrl"]) {
     [self onLoadUrl:call result:result];
+  } else if ([[call method] isEqualToString:@"loadAssetFile"]) {
+      [self onLoadAssetFile:call result:result];
   } else if ([[call method] isEqualToString:@"canGoBack"]) {
     [self onCanGoBack:call result:result];
   } else if ([[call method] isEqualToString:@"canGoForward"]) {
@@ -183,6 +193,41 @@
   }
 }
 
+- (void)onLoadAssetFile:(FlutterMethodCall*)call result:(FlutterResult)result {
+  NSString* url = [call arguments];
+  if (![self loadAssetFile:url]) {
+    result([FlutterError errorWithCode:@"loadAssetFile_failed"
+                               message:@"Failed parsing the URL"
+                               details:[NSString stringWithFormat:@"URL was: '%@'", url]]);
+  } else {
+    result(nil);
+  }
+}
+
+- (bool)loadAssetFile:(NSString*)url {
+  NSArray* array = [url componentsSeparatedByString:@"?"];
+  NSString* pathString = [array objectAtIndex:0];
+  NSLog(@"%@%@", @"pathString: ", pathString);
+  NSString* key = [_registrar lookupKeyForAsset:pathString];
+  NSURL* baseURL = [[NSBundle mainBundle] URLForResource:key withExtension:nil];
+  if (!baseURL) {
+      return false;
+   }
+  NSURL* newUrl = baseURL;
+  if ([array count] > 1) {
+    NSString* queryString = [array objectAtIndex:1];
+    NSLog(@"%@%@", @"queryString: ", queryString);
+    NSString* queryPart = [NSString stringWithFormat:@"%@%@", @"?", queryString];
+    NSLog(@"%@%@", @"queryPart: ", queryPart);
+    newUrl = [NSURL URLWithString:queryPart relativeToURL:baseURL];
+  }
+  if (@available(iOS 9.0, *)) {
+    [_webView loadFileURL:newUrl allowingReadAccessToURL:[NSURL URLWithString:@"file:///"]];
+  } else {
+    return false;
+  }
+  return true;
+}
 - (void)onCanGoBack:(FlutterMethodCall*)call result:(FlutterResult)result {
   BOOL canGoBack = [_webView canGoBack];
   result([NSNumber numberWithBool:canGoBack]);

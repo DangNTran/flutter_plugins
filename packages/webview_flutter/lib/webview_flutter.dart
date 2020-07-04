@@ -548,6 +548,10 @@ class WebViewController {
     return _webViewPlatformController.loadUrl(url, headers);
   }
 
+  Future<void> loadAssetFile(String url, Map<String, String> headers) async {
+    assert(url != null);
+    return _webViewPlatformController.loadUrl(url, headers);
+  }
   /// Accessor to the current URL that the WebView is displaying.
   ///
   /// If [WebView.initialUrl] was never specified, returns `null`.
