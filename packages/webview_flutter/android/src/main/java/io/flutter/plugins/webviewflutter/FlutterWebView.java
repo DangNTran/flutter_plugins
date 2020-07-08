@@ -10,9 +10,9 @@ import android.hardware.display.DisplayManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
-import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebStorage;
@@ -22,15 +22,16 @@ import android.webkit.WebViewClient;
 import androidx.annotation.Nullable;
 import androidx.webkit.WebViewAssetLoader;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class FlutterWebView implements PlatformView, MethodCallHandler {
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
@@ -89,16 +90,19 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       WebView.setWebContentsDebuggingEnabled(true);
     }
     final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/video/", new WebViewAssetLoader.AssetsPathHandler(context))
+            .addPathHandler("/android-assets/", new WebViewAssetLoader.AssetsPathHandler(context))
             .build();
     webView.setWebViewClient(new WebViewClient() {
 
       @Nullable
       @Override
       public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          Log.i("FlutterWebView", "shouldInterceptRequest" + request.getUrl());
           return assetLoader.shouldInterceptRequest(request.getUrl());
         }
+        Log.i("FlutterWebView", "shouldInterceptRequest" + view.getUrl());
         return assetLoader.shouldInterceptRequest(Uri.parse(view.getUrl()));
       }
     });
