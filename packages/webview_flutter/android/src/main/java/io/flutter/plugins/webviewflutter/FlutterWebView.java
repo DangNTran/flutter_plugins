@@ -125,7 +125,10 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     if (params.containsKey("initialUrl")) {
       String url = (String) params.get("initialUrl");
       if (url.contains("://")) {
-        webView.loadUrl(url, extraHeaders);
+        String html = "<html><body><iframe src=\"iframeUrlPlaceholder\"></iframe></body></html>";
+        String mime = "text/html";
+        String encoding = "utf-8";
+        webView.loadDataWithBaseURL("https://student.ecademy.vn", html.replaceAll("iframeUrlPlaceholder", url), mime, encoding, null);
       } else {
         webView.loadUrl("file:///android_asset/flutter_assets/" + url, extraHeaders);
       }
