@@ -103,7 +103,7 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
           Log.i("FlutterWebView", "shouldInterceptRequest " + request.getUrl());
           WebResourceResponse res = assetLoader.shouldInterceptRequest(request.getUrl());
-          Log.i("FlutterWebView", String.valueOf(res.getStatusCode()));
+          Log.i("FlutterWebView", res != null ? String.valueOf(res.getStatusCode()) : "null_res");
           return res;
         }
         Log.i("FlutterWebView", "shouldInterceptRequest old ");
