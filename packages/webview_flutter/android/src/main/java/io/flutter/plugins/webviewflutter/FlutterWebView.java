@@ -13,12 +13,15 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.webkit.WebViewAssetLoader;
 
@@ -69,7 +72,8 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     webView.getSettings().setDisplayZoomControls(true);
     webView.getSettings().setSupportZoom(true);
     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-
+    webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+    webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
     methodChannel = new MethodChannel(messenger, "plugins.flutter.io/webview_" + id);
     methodChannel.setMethodCallHandler(this);
 
@@ -95,8 +99,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
             .setHttpAllowed(false)
             .addPathHandler("/android-assets/", new WebViewAssetLoader.AssetsPathHandler(context))
             .build();
+    webView.setWebChromeClient(new WebChromeClient() {
+    });
     webView.setWebViewClient(new WebViewClient() {
-
       @Nullable
       @Override
       public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
