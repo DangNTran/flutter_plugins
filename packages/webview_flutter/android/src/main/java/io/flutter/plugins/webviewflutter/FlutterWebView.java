@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.webkit.WebViewAssetLoader;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -114,12 +115,14 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       String userAgent = (String) params.get("userAgent");
       updateUserAgent(userAgent);
     }
+    Map<String, String> extraHeaders = new HashMap<String, String>();
+    extraHeaders.put("X-Requested-With", "student.ecademy.vn");
     if (params.containsKey("initialUrl")) {
       String url = (String) params.get("initialUrl");
       if (url.contains("://")) {
-        webView.loadUrl(url);
+        webView.loadUrl(url, extraHeaders);
       } else {
-        webView.loadUrl("file:///android_asset/flutter_assets/" + url);
+        webView.loadUrl("file:///android_asset/flutter_assets/" + url, extraHeaders);
       }
 
     }
