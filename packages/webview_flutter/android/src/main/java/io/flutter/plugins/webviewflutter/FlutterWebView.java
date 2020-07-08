@@ -90,6 +90,8 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       WebView.setWebContentsDebuggingEnabled(true);
     }
     final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+            .setDomain("student.ecademy.vn")
+            .setHttpAllowed(false)
             .addPathHandler("/android-assets/", new WebViewAssetLoader.AssetsPathHandler(context))
             .build();
     webView.setWebViewClient(new WebViewClient() {
@@ -99,10 +101,12 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-          Log.i("FlutterWebView", "shouldInterceptRequest" + request.getUrl());
-          return assetLoader.shouldInterceptRequest(request.getUrl());
+          Log.i("FlutterWebView", "shouldInterceptRequest " + request.getUrl());
+          WebResourceResponse res = assetLoader.shouldInterceptRequest(request.getUrl());
+          Log.i("FlutterWebView", String.valueOf(res.getStatusCode()));
+          return res;
         }
-        Log.i("FlutterWebView", "shouldInterceptRequest" + view.getUrl());
+        Log.i("FlutterWebView", "shouldInterceptRequest old ");
         return assetLoader.shouldInterceptRequest(Uri.parse(view.getUrl()));
       }
     });
