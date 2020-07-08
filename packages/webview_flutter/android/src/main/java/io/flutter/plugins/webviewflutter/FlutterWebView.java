@@ -7,14 +7,21 @@ package io.flutter.plugins.webviewflutter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
+import androidx.annotation.Nullable;
+import androidx.webkit.WebViewAssetLoader;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -81,7 +88,20 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
     }
-    webView.setWebChromeClient(new WebChromeClient());
+    final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/video/", new WebViewAssetLoader.AssetsPathHandler(context))
+            .build();
+    webView.setWebViewClient(new WebViewClient() {
+
+      @Nullable
+      @Override
+      public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+          return assetLoader.shouldInterceptRequest(request.getUrl());
+        }
+        return assetLoader.shouldInterceptRequest(Uri.parse(view.getUrl()));
+      }
+    });
     if (params.containsKey("userAgent")) {
       String userAgent = (String) params.get("userAgent");
       updateUserAgent(userAgent);
