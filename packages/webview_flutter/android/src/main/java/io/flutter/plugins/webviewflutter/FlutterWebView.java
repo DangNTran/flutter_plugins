@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.webkit.WebViewAssetLoader;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -121,14 +123,24 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       updateUserAgent(userAgent);
     }
     Map<String, String> extraHeaders = new HashMap<String, String>();
-    extraHeaders.put("X-Requested-With", "student.ecademy.vn");
+    extraHeaders.put("X-Requested-With", "");
     if (params.containsKey("initialUrl")) {
       String url = (String) params.get("initialUrl");
       if (url.contains("://")) {
         String html = "<html><body><iframe height=\"100%\" width=\"100%\" src=\"iframeUrlPlaceholder\"></iframe></body></html>";
         String mime = "text/html";
         String encoding = "utf-8";
-        webView.loadDataWithBaseURL("https://student.ecademy.vn", html.replaceAll("iframeUrlPlaceholder", url), mime, encoding, null);
+        try {
+        InputStream stream = context.getAssets().open("file:///android_asset/flutter_assets/assets/video/android.html");
+        int size = stream.available();
+        byte[] buffer = new byte[size];
+        stream.read(buffer);
+        stream.close();
+        html = new String(buffer);
+        } catch (IOException e) {
+          Log.e("Exception", e.getMessage());
+        }
+        webView.loadDataWithBaseURL("https://student.ecademy.vn", html.replaceAll("params_url", url), mime, encoding, null);
       } else {
         webView.loadUrl("file:///android_asset/flutter_assets/" + url, extraHeaders);
       }
